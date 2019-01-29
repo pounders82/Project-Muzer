@@ -7,14 +7,26 @@ module.exports = (app) => {
         scope: ['profile', 'email'] // what access do we want.  We could ask for more this is all we want.
     }));
 
-    app.get('/auth/google/callback', passport.authenticate('google'));//This is the route back from google and attempts to create an account
+    app.get('/auth/google/callback',
+        passport.authenticate('google'),
+        (req, res) =>{
+         res.redirect('/player')  //after user is authed then send to dashboard.  i will need to change to the page alex has set up.
+        }
+    );//This is the route back from google and attempts to create an account
+
+    app.get('/auth/gitlab', passport.authenticate('gitlab',{
+        scope: ['user:email']
+        }
+        ));
+
+    app.get('/auth/gitlab/callback', passport.authenticate('gitlab'));
 
     app.get('/api/logout', (req,res) =>{
         req.logOut();//This tells Passport to kill the cookies and logout the user.
-        res.send(req.user);
+        res.redirect('/')
     });
 
-    app.get('/api/current_user', (req,res) =>{
+    app.get('/api/current_user', (req,res) =>{ //We will use this later to tell if the user is logged in.
         res.send(req.user);
         }
     );

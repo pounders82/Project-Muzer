@@ -1,5 +1,6 @@
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
+const GitLabStrategy = require('passport-gitlab2').Strategy;
 const keys = require('../config/keys');
 const mongoose = require('mongoose');
 
@@ -33,20 +34,41 @@ passport.use(new GoogleStrategy({
         clientSecret: keys.googleClientSecret,
         callbackURL: '/auth/google/callback',  // this is where Google is going to send the user after auth
     },
-    (accessToken, refreshToken, profile,done) =>{
+    async (accessToken, refreshToken, profile,done) =>{
     //This checks to see if the user exists.  If not the create user
-    User.findOne({ googleId: profile.id }).then(existingUser => {
+    const existingUser = await User.findOne({ googleId: profile.id });
         if(existingUser){
-        //We already have the user
+            //We already have the user
             done(null, existingUser);
         }
         else{
             //creates a model instance with the google profile id and then saves.
-            new User({ googleId: profile.id })
-                .save()
-                .then(user => done(null,user));
-
+            const user = await new User({ googleId: profile.id, email: profile.email }).save();
+            done(null,user);
         }
+    }));
+
+
+passport.use(new GitLabStrategy({
+        clientID: keys.GITLAB_APP_ID,
+        clientSecret: keys.GITLAB_APP_SECRET,
+        gitlabURL: "https://gitlab.example.com/oauth/authorize?client_id=APP_ID&redirect_uri=REDIRECT_URI&response_type=code&state=YOUR_UNIQUE_STATE_HASH",
+        callbackURL: "auth/gitlab/callback"
+    },
+    (accessToken, refreshToken, profile,done) =>{
+        //This checks to see if the user exists.  If not the create user
+        User.findOne({ gitlabId: profile.id }).then(existingUser => {
+            if(existingUser){
+                //We already have the user
+                done(null, existingUser);
+            }
+            else{
+                //creates a model instance with the gitlab profile id and then saves.
+                new User({ gitlabId: profile.id })
+                    .save()
+                    .then(user => done(null,user));
+
+            }
         })
 
     }));
