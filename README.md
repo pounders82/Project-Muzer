@@ -1,1 +1,2 @@
-# node-project-9-15-2018
+# Project Muzer
+The objective of this project to create a cloud based application using Node.js and React.js for streaming music
